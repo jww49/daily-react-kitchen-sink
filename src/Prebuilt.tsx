@@ -4,19 +4,27 @@ import { DailyProvider, useCallFrame } from "@daily-co/daily-react";
 
 export const Prebuilt = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Musician joins via a link ending in ?musician=1
+  const isMusician =
+    new URLSearchParams(window.location.search).get("musician") === "1";
+
   const callFrame = useCallFrame({
     // @ts-expect-error will be fixed in the next release
     parentElRef: wrapperRef,
     options: {
-      url: "https://hush.daily.co/music-mode",
+      url: "https://YOUR-DOMAIN.daily.co/YOUR-ROOM", // replace with your own room
       dailyConfig: {
-        // Sends a 256kbps stereo mic track instead of the speech-optimized
-        // browser defaults. SFU mode only.
-        micAudioMode: "music",
+        useDevicePreferenceCookies: true,
+        // Music mode only for the musician; listeners get the default voice mode
+        ...(isMusician ? { micAudioMode: "music" as const } : {}),
       },
       iframeStyle: {
         width: "100%",
         height: "80vh",
+      },
+      userData: {
+        avatar: "https://www.svgrepo.com/show/532036/cloud-rain-alt.svg",
       },
     },
     shouldCreateInstance: useCallback(() => Boolean(wrapperRef.current), []),
@@ -24,10 +32,6 @@ export const Prebuilt = () => {
 
   useEffect(() => {
     if (!callFrame) return;
-
-    // @ts-expect-error debugging
-    window.callObject = callFrame;
-
     callFrame.join().catch((err) => {
       console.error("Error joining call", err);
     });
